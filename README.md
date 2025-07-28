@@ -18,6 +18,10 @@ python gui/main.py
 The application loads example data from `sample_data.json` and plots the nodes
 and targets on a Leaflet-based map.
 
+Use the **Select Hardware** button in the sidebar to choose which WiFi
+interface and GPS device will be used for surveys. Hardware discovery is
+supported on both Windows and Linux.
+
 To bundle as a single executable you can use PyInstaller:
 
 ```bash
