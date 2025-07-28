@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import subprocess
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sample_data.json')
@@ -15,16 +16,44 @@ def load_data(path=DATA_FILE):
 
 
 def discover_hardware():
+    """Return available WiFi interfaces and GPS devices."""
     wifi = []
     gps = []
-    for root, dirs, files in os.walk('/sys/class/net'):
-        for d in dirs:
-            if d.startswith('wlan') or d.startswith('wifi'):
-                wifi.append(d)
-    if os.path.exists('/dev'):
-        for f in os.listdir('/dev'):
-            if 'gps' in f.lower() or f.startswith('ttyUSB'):
-                gps.append(f)
+
+    if sys.platform.startswith('linux'):
+        for root, dirs, _ in os.walk('/sys/class/net'):
+            for d in dirs:
+                if d.startswith('wlan') or d.startswith('wifi'):
+                    wifi.append(d)
+        if os.path.exists('/dev'):
+            for f in os.listdir('/dev'):
+                lf = f.lower()
+                if 'gps' in lf or f.startswith('ttyUSB'):
+                    gps.append(f)
+
+    elif sys.platform.startswith('win'):
+        try:
+            out = subprocess.check_output(
+                ['netsh', 'wlan', 'show', 'interfaces'],
+                text=True, stderr=subprocess.DEVNULL)
+            for line in out.splitlines():
+                if 'Name' in line:
+                    wifi.append(line.split(':', 1)[1].strip())
+        except Exception:
+            pass
+
+        try:
+            out = subprocess.check_output(
+                ['wmic', 'path', 'Win32_SerialPort', 'get', 'DeviceID,Name'],
+                text=True, stderr=subprocess.DEVNULL)
+            for line in out.splitlines():
+                if 'GPS' in line.upper():
+                    parts = line.split()
+                    if parts:
+                        gps.append(parts[0])
+        except Exception:
+            pass
+
     return {'wifi': wifi, 'gps': gps}
 
 
@@ -55,6 +84,9 @@ class MainWindow(QtWidgets.QMainWindow):
         side_layout.addWidget(QtWidgets.QLabel('Filters / Stats'))
         self.hw_label = QtWidgets.QLabel('Hardware:')
         side_layout.addWidget(self.hw_label)
+        hw_btn = QtWidgets.QPushButton('Select Hardware')
+        hw_btn.clicked.connect(self.choose_hardware)
+        side_layout.addWidget(hw_btn)
         side_layout.addStretch(1)
 
         self.map_view = MapView()
@@ -79,6 +111,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.status = QtWidgets.QStatusBar()
         self.setStatusBar(self.status)
+
+        self.selected_wifi = None
+        self.selected_gps = None
         self.update_status()
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_status)
@@ -86,9 +121,40 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.load_markers()
 
+    def choose_hardware(self):
+        hw = discover_hardware()
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle('Select Hardware')
+        layout = QtWidgets.QFormLayout(dlg)
+
+        wifi_combo = QtWidgets.QComboBox()
+        wifi_combo.addItems(hw['wifi'])
+        if self.selected_wifi in hw['wifi']:
+            wifi_combo.setCurrentText(self.selected_wifi)
+        layout.addRow('WiFi:', wifi_combo)
+
+        gps_combo = QtWidgets.QComboBox()
+        gps_combo.addItems(hw['gps'])
+        if self.selected_gps in hw['gps']:
+            gps_combo.setCurrentText(self.selected_gps)
+        layout.addRow('GPS:', gps_combo)
+
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                             QtWidgets.QDialogButtonBox.Cancel)
+        layout.addRow(buttons)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+
+        if dlg.exec_() == QtWidgets.QDialog.Accepted:
+            self.selected_wifi = wifi_combo.currentText() or None
+            self.selected_gps = gps_combo.currentText() or None
+            self.update_status()
+
     def update_status(self):
         hw = discover_hardware()
-        self.hw_label.setText(f"Hardware: wifi={len(hw['wifi'])} gps={len(hw['gps'])}")
+        wifi_text = self.selected_wifi or (hw['wifi'][0] if hw['wifi'] else 'none')
+        gps_text = self.selected_gps or (hw['gps'][0] if hw['gps'] else 'none')
+        self.hw_label.setText(f"WiFi: {wifi_text}  GPS: {gps_text}")
         self.status.showMessage('Mesh Active | Nodes Online: 2 | Packets/sec: 0 | Time: ' +
                                 QtCore.QDateTime.currentDateTime().toString())
 
