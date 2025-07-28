@@ -4,6 +4,8 @@ import sys
 import subprocess
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
+from wifi import scan_networks, start_monitor_mode, stop_monitor_mode
+
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sample_data.json')
 MAP_HTML = os.path.join(os.path.dirname(__file__), 'map.html')
 
@@ -87,6 +89,9 @@ class MainWindow(QtWidgets.QMainWindow):
         hw_btn = QtWidgets.QPushButton('Select Hardware')
         hw_btn.clicked.connect(self.choose_hardware)
         side_layout.addWidget(hw_btn)
+        wifi_ctrl_btn = QtWidgets.QPushButton('WiFi Control')
+        wifi_ctrl_btn.clicked.connect(self.open_wifi_dialog)
+        side_layout.addWidget(wifi_ctrl_btn)
         side_layout.addStretch(1)
 
         self.map_view = MapView()
@@ -120,6 +125,66 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timer.start(5000)
 
         self.load_markers()
+
+    def open_wifi_dialog(self):
+        hw = discover_hardware()
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle('WiFi Control')
+        layout = QtWidgets.QVBoxLayout(dlg)
+
+        iface_combo = QtWidgets.QComboBox()
+        iface_combo.addItems(hw['wifi'])
+        if self.selected_wifi in hw['wifi']:
+            iface_combo.setCurrentText(self.selected_wifi)
+        layout.addWidget(QtWidgets.QLabel('Interface'))
+        layout.addWidget(iface_combo)
+
+        scan_btn = QtWidgets.QPushButton('Scan Networks')
+        layout.addWidget(scan_btn)
+
+        table = QtWidgets.QTableWidget(0, 3)
+        table.setHorizontalHeaderLabels(['SSID', 'Channel', 'Encryption'])
+        layout.addWidget(table)
+
+        def do_scan():
+            table.setRowCount(0)
+            nets = scan_networks(iface_combo.currentText())
+            for net in nets:
+                row = table.rowCount()
+                table.insertRow(row)
+                table.setItem(row, 0, QtWidgets.QTableWidgetItem(net['ssid']))
+                table.setItem(row, 1, QtWidgets.QTableWidgetItem(net['channel']))
+                table.setItem(row, 2, QtWidgets.QTableWidgetItem(net['encryption']))
+
+        def select_row(row, _column):
+            ssid_edit.setText(table.item(row, 0).text())
+            channel_edit.setText(table.item(row, 1).text())
+            enc_edit.setText(table.item(row, 2).text())
+
+        table.cellClicked.connect(select_row)
+
+        scan_btn.clicked.connect(do_scan)
+
+        channel_edit = QtWidgets.QLineEdit()
+        ssid_edit = QtWidgets.QLineEdit()
+        enc_edit = QtWidgets.QLineEdit()
+        form = QtWidgets.QFormLayout()
+        form.addRow('Channel', channel_edit)
+        form.addRow('SSID', ssid_edit)
+        form.addRow('Encryption', enc_edit)
+        layout.addLayout(form)
+
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok |
+                                             QtWidgets.QDialogButtonBox.Cancel)
+        layout.addWidget(buttons)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+
+        if dlg.exec_() == QtWidgets.QDialog.Accepted:
+            self.selected_wifi = iface_combo.currentText() or None
+            # Start monitor mode on selected channel
+            if self.selected_wifi:
+                start_monitor_mode(self.selected_wifi, channel_edit.text())
 
     def choose_hardware(self):
         hw = discover_hardware()

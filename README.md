@@ -22,6 +22,11 @@ Use the **Select Hardware** button in the sidebar to choose which WiFi
 interface and GPS device will be used for surveys. Hardware discovery is
 supported on both Windows and Linux.
 
+The new **WiFi Control** dialog allows scanning for nearby access points
+and placing your selected interface into monitor mode. You can choose the
+desired channel, SSID and encryption method before starting packet
+capture via aircrack-ng utilities.
+
 To bundle as a single executable you can use PyInstaller:
 
 ```bash
@@ -33,3 +38,4 @@ pyinstaller gui/main.py --onefile --noconsole
 - `gui/main.py` – main PyQt GUI application.
 - `gui/map.html` – embedded Leaflet map used by the GUI.
 - `sample_data.json` – example mesh packet data.
+- `wifi.py` – helper functions for WiFi scanning and monitor mode.
