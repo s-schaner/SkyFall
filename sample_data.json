@@ -1,0 +1,26 @@
+[
+  {
+    "node_id": "uav-01",
+    "gps": { "lat": 38.8951, "lon": -77.0364 },
+    "targets": [
+      {
+        "mac": "DE:AD:BE:EF:00:01",
+        "rssi": -62,
+        "freq": 2412,
+        "timestamp": 1723588200
+      }
+    ]
+  },
+  {
+    "node_id": "uav-02",
+    "gps": { "lat": 38.8960, "lon": -77.0370 },
+    "targets": [
+      {
+        "mac": "DE:AD:BE:EF:00:02",
+        "rssi": -70,
+        "freq": 2412,
+        "timestamp": 1723588205
+      }
+    ]
+  }
+]

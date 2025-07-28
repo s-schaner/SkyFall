@@ -1,2 +1,31 @@
 # SkyFall
-Skyfall is an application for team based UAV wifi geolocation and mapping.
+
+SkyFall is a tactical GUI interface for white-hat UAV reconnaissance. It visualizes
+UAV locations and detected wireless targets on an interactive map.
+
+## Requirements
+* Python 3.8+
+* PyQt5 and PyQtWebEngine
+
+## Running
+Install dependencies and run the GUI:
+
+```bash
+pip install PyQt5 PyQtWebEngine
+python gui/main.py
+```
+
+The application loads example data from `sample_data.json` and plots the nodes
+and targets on a Leaflet-based map.
+
+To bundle as a single executable you can use PyInstaller:
+
+```bash
+pip install pyinstaller
+pyinstaller gui/main.py --onefile --noconsole
+```
+
+## Files
+- `gui/main.py` – main PyQt GUI application.
+- `gui/map.html` – embedded Leaflet map used by the GUI.
+- `sample_data.json` – example mesh packet data.
