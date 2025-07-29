@@ -30,6 +30,9 @@ and placing your selected interface into monitor mode. You can choose the
 desired channel, SSID and encryption method before starting packet
 capture via aircrack-ng utilities.
 
+You can also run `hardware.py` directly from the command line to list
+available WiFi interfaces and GPS devices detected on your system.
+
 To bundle as a single executable you can use PyInstaller:
 
 ```bash
@@ -42,3 +45,4 @@ pyinstaller gui/main.py --onefile --noconsole
 - `gui/map.html` – embedded Leaflet map used by the GUI.
 - `sample_data.json` – example mesh packet data.
 - `wifi.py` – helper functions for WiFi scanning and monitor mode.
+- `hardware.py` – cross-platform discovery of WiFi interfaces and GPS devices.

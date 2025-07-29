@@ -10,6 +10,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from wifi import scan_networks, start_monitor_mode, stop_monitor_mode
+from hardware import discover_hardware
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sample_data.json')
 MAP_HTML = os.path.join(os.path.dirname(__file__), 'map.html')
@@ -20,48 +21,6 @@ def load_data(path=DATA_FILE):
         with open(path) as f:
             return json.load(f)
     return []
-
-
-def discover_hardware():
-    """Return available WiFi interfaces and GPS devices."""
-    wifi = []
-    gps = []
-
-    if sys.platform.startswith('linux'):
-        for root, dirs, _ in os.walk('/sys/class/net'):
-            for d in dirs:
-                if d.startswith('wlan') or d.startswith('wifi'):
-                    wifi.append(d)
-        if os.path.exists('/dev'):
-            for f in os.listdir('/dev'):
-                lf = f.lower()
-                if 'gps' in lf or f.startswith('ttyUSB'):
-                    gps.append(f)
-
-    elif sys.platform.startswith('win'):
-        try:
-            out = subprocess.check_output(
-                ['netsh', 'wlan', 'show', 'interfaces'],
-                text=True, stderr=subprocess.DEVNULL)
-            for line in out.splitlines():
-                if 'Name' in line:
-                    wifi.append(line.split(':', 1)[1].strip())
-        except Exception:
-            pass
-
-        try:
-            out = subprocess.check_output(
-                ['wmic', 'path', 'Win32_SerialPort', 'get', 'DeviceID,Name'],
-                text=True, stderr=subprocess.DEVNULL)
-            for line in out.splitlines():
-                if 'GPS' in line.upper():
-                    parts = line.split()
-                    if parts:
-                        gps.append(parts[0])
-        except Exception:
-            pass
-
-    return {'wifi': wifi, 'gps': gps}
 
 
 n_dark = QtGui.QColor('#2b2b2b')
