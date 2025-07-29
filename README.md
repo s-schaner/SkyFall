@@ -11,15 +11,16 @@ UAV locations and detected wireless targets on an interactive map.
 Install dependencies and run the GUI:
 
 ```bash
-pip install PyQt5 PyQtWebEngine
+./install.sh       # or .\install.ps1 on Windows
 python gui/main.py
 ```
 
 On Windows the application relies on `netsh` for network scanning, while Linux
 uses `iwlist` and the aircrack-ng suite. No extra WiFi libraries are required.
 
-The application loads example data from `sample_data.json` and plots the nodes
-and targets on a Leaflet-based map.
+The application stores captured node and target data in a local SQLite
+database (`skyfall.db`). Markers are loaded from this database when the GUI
+starts.
 
 Use the **Select Hardware** button in the sidebar to choose which WiFi
 interface and GPS device will be used for surveys. Hardware discovery is
@@ -43,6 +44,8 @@ pyinstaller gui/main.py --onefile --noconsole
 ## Files
 - `gui/main.py` – main PyQt GUI application.
 - `gui/map.html` – embedded Leaflet map used by the GUI.
-- `sample_data.json` – example mesh packet data.
+- `database.py` – simple SQLite interface used by the GUI.
 - `wifi.py` – helper functions for WiFi scanning and monitor mode.
 - `hardware.py` – cross-platform discovery of WiFi interfaces and GPS devices.
+- `install.sh` / `install.ps1` – scripts for installing dependencies and
+  initializing the database.

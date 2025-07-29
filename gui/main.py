@@ -1,8 +1,8 @@
-import json
 import os
 import sys
 import subprocess
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
+from database import init_db, get_nodes_with_targets
 
 # Ensure the project root is on the module search path so wifi.py can be imported
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
@@ -12,15 +12,9 @@ if PROJECT_ROOT not in sys.path:
 from wifi import scan_networks, start_monitor_mode, stop_monitor_mode
 from hardware import discover_hardware
 
-DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sample_data.json')
 MAP_HTML = os.path.join(os.path.dirname(__file__), 'map.html')
 
 
-def load_data(path=DATA_FILE):
-    if os.path.exists(path):
-        with open(path) as f:
-            return json.load(f)
-    return []
 
 
 n_dark = QtGui.QColor('#2b2b2b')
@@ -188,7 +182,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                 QtCore.QDateTime.currentDateTime().toString())
 
     def load_markers(self):
-        data = load_data()
+        data = get_nodes_with_targets()
         for node in data:
             gps = node['gps']
             info = f"Node {node['node_id']}"
@@ -199,6 +193,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 def main():
+    init_db()
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
     window.show()
