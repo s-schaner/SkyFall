@@ -4,6 +4,11 @@ import sys
 import subprocess
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
+# Ensure the project root is on the module search path so wifi.py can be imported
+PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from wifi import scan_networks, start_monitor_mode, stop_monitor_mode
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sample_data.json')
