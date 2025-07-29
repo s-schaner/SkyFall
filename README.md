@@ -15,6 +15,9 @@ pip install PyQt5 PyQtWebEngine
 python gui/main.py
 ```
 
+On Windows the application relies on `netsh` for network scanning, while Linux
+uses `iwlist` and the aircrack-ng suite. No extra WiFi libraries are required.
+
 The application loads example data from `sample_data.json` and plots the nodes
 and targets on a Leaflet-based map.
 
