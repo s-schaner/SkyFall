@@ -2,9 +2,29 @@ import json
 import os
 import sys
 import subprocess
+import logging
 from PyQt5 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
-from wifi import scan_networks, start_monitor_mode, stop_monitor_mode
+LOG_FILE = os.path.join(os.path.dirname(__file__), 'skyfall.log')
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(message)s'
+)
+
+try:
+    from wifi import scan_networks, start_monitor_mode, stop_monitor_mode
+except Exception as e:
+    logging.exception('Failed to import wifi module')
+
+    def scan_networks(*_args, **_kwargs):
+        return []
+
+    def start_monitor_mode(*_args, **_kwargs):
+        pass
+
+    def stop_monitor_mode(*_args, **_kwargs):
+        pass
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sample_data.json')
 MAP_HTML = os.path.join(os.path.dirname(__file__), 'map.html')
@@ -155,6 +175,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 table.setItem(row, 0, QtWidgets.QTableWidgetItem(net['ssid']))
                 table.setItem(row, 1, QtWidgets.QTableWidgetItem(net['channel']))
                 table.setItem(row, 2, QtWidgets.QTableWidgetItem(net['encryption']))
+            if not nets:
+                QtWidgets.QMessageBox.warning(dlg, 'Scan', 'No networks found or scan failed.')
 
         def select_row(row, _column):
             ssid_edit.setText(table.item(row, 0).text())
@@ -235,10 +257,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    logging.info('Starting SkyFall GUI')
+    try:
+        app = QtWidgets.QApplication(sys.argv)
+        window = MainWindow()
+        window.show()
+        sys.exit(app.exec_())
+    except Exception:
+        logging.exception('Unhandled exception')
+        sys.exit(1)
 
 
 if __name__ == '__main__':

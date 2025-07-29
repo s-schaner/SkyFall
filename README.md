@@ -26,6 +26,8 @@ The new **WiFi Control** dialog allows scanning for nearby access points
 and placing your selected interface into monitor mode. You can choose the
 desired channel, SSID and encryption method before starting packet
 capture via aircrack-ng utilities.
+On Windows, scanning relies on `netsh` while monitor mode is not
+supported; on Linux `iwlist` and aircrack-ng utilities are used.
 
 To bundle as a single executable you can use PyInstaller:
 
@@ -39,3 +41,4 @@ pyinstaller gui/main.py --onefile --noconsole
 - `gui/map.html` – embedded Leaflet map used by the GUI.
 - `sample_data.json` – example mesh packet data.
 - `wifi.py` – helper functions for WiFi scanning and monitor mode.
+- `gui/skyfall.log` – runtime log created for debugging.
